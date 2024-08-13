@@ -41,8 +41,8 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             Slient_eTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) {
-                    MainScreen()
+                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+                    MainScreen(Modifier.padding(innerPadding))
                 }
             }
         }
@@ -50,14 +50,14 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun MainScreen() {
+fun MainScreen(modifier: Modifier) {
     var selectedVideoUri by remember { mutableStateOf<Uri?>(null) }
     var isExtractionStarted by remember { mutableStateOf(false) }
     var extractionStatus by remember { mutableStateOf("") }
     val context = LocalContext.current
 
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .padding(top = 34.dp, start = 20.dp, end = 20.dp)
     ) {
