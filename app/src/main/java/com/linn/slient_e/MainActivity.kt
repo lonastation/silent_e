@@ -121,12 +121,11 @@ fun VideoPicker(onVideoSelected: (Uri) -> Unit) {
 fun extractAudioAndConvertToMp3(videoUri: Uri, context: Context, onStatusUpdate: (String) -> Unit) {
     val extractor = MediaExtractor()
     extractor.setDataSource(context, videoUri, null)
-    Log.d("extract audio", "start")
+    Log.d("AudioExtractor", "start")
 
     var audioTrackIndex = -1
     var audioFormat: MediaFormat? = null
 
-    // Find the audio track index
     for (i in 0 until extractor.trackCount) {
         val format = extractor.getTrackFormat(i)
         val mime = format.getString(MediaFormat.KEY_MIME)
@@ -139,18 +138,16 @@ fun extractAudioAndConvertToMp3(videoUri: Uri, context: Context, onStatusUpdate:
     }
 
     if (audioTrackIndex >= 0 && audioFormat != null) {
-        // Prepare output file for MP3
-        val outputFile = File(context.getExternalFilesDir(null), "extracted_audio.mp3")
+        val outputFile =
+            File(context.getExternalFilesDir(null), "${videoUri.lastPathSegment}_audio.mp3")
         val muxer = MediaMuxer(outputFile.absolutePath, MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4)
 
-        // Add the audio track to the muxer
         val muxerAudioTrackIndex = muxer.addTrack(audioFormat)
         muxer.start()
 
         val buffer = ByteBuffer.allocate(1024 * 1024)
         val bufferInfo = MediaCodec.BufferInfo()
 
-        // Read audio data and write to the muxer
         while (true) {
             val sampleSize = extractor.readSampleData(buffer, 0)
             if (sampleSize < 0) {
@@ -170,7 +167,6 @@ fun extractAudioAndConvertToMp3(videoUri: Uri, context: Context, onStatusUpdate:
             extractor.advance()
         }
 
-        // Release resources
         muxer.stop()
         muxer.release()
         extractor.release()
