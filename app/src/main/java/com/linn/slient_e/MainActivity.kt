@@ -7,10 +7,12 @@ import android.media.MediaFormat
 import android.media.MediaMuxer
 import android.net.Uri
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -29,8 +31,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import com.arthenica.ffmpegkit.FFmpegKit
-import com.arthenica.ffmpegkit.ReturnCode
 import com.linn.slient_e.ui.theme.Slient_eTheme
 import java.io.File
 import java.nio.ByteBuffer
@@ -92,7 +92,7 @@ fun MainScreen(modifier: Modifier) {
                 Text("Selected Video: ${selectedVideoUri.toString()}")
             }
             if (isExtractionStarted) {
-                Text("Audio extraction in progress...")
+                Text(extractionStatus)
             }
         }
     }
@@ -100,13 +100,18 @@ fun MainScreen(modifier: Modifier) {
 
 @Composable
 fun VideoPicker(onVideoSelected: (Uri) -> Unit) {
-    val launcher =
-        rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
-            uri?.let { onVideoSelected(it) }
+    val pickMedia =
+        rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
+            if (uri != null) {
+                onVideoSelected(uri)
+                Log.d("PhotoPicker", "Selected URI: $uri")
+            } else {
+                Log.d("PhotoPicker", "No media selected")
+            }
         }
 
     Button(
-        onClick = { launcher.launch("video/*") },
+        onClick = { pickMedia.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.VideoOnly)) },
         modifier = Modifier.fillMaxWidth()
     ) {
         Text("Select Video")
@@ -114,78 +119,67 @@ fun VideoPicker(onVideoSelected: (Uri) -> Unit) {
 }
 
 fun extractAudioAndConvertToMp3(videoUri: Uri, context: Context, onStatusUpdate: (String) -> Unit) {
-    val mediaExtractor = MediaExtractor()
-    mediaExtractor.setDataSource(context, videoUri, null)
+    val extractor = MediaExtractor()
+    extractor.setDataSource(context, videoUri, null)
+    Log.d("extract audio", "start")
 
     var audioTrackIndex = -1
-    for (i in 0 until mediaExtractor.trackCount) {
-        val format = mediaExtractor.getTrackFormat(i)
+    var audioFormat: MediaFormat? = null
+
+    // Find the audio track index
+    for (i in 0 until extractor.trackCount) {
+        val format = extractor.getTrackFormat(i)
         val mime = format.getString(MediaFormat.KEY_MIME)
-        if (mime != null) {
-            if (mime.startsWith("audio/")) {
-                audioTrackIndex = i
-                mediaExtractor.selectTrack(audioTrackIndex)
+        if (mime != null && mime.startsWith("audio/")) {
+            audioTrackIndex = i
+            audioFormat = format
+            extractor.selectTrack(audioTrackIndex)
+            break
+        }
+    }
+
+    if (audioTrackIndex >= 0 && audioFormat != null) {
+        // Prepare output file for MP3
+        val outputFile = File(context.getExternalFilesDir(null), "extracted_audio.mp3")
+        val muxer = MediaMuxer(outputFile.absolutePath, MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4)
+
+        // Add the audio track to the muxer
+        val muxerAudioTrackIndex = muxer.addTrack(audioFormat)
+        muxer.start()
+
+        val buffer = ByteBuffer.allocate(1024 * 1024)
+        val bufferInfo = MediaCodec.BufferInfo()
+
+        // Read audio data and write to the muxer
+        while (true) {
+            val sampleSize = extractor.readSampleData(buffer, 0)
+            if (sampleSize < 0) {
                 break
             }
-        }
-    }
 
-    if (audioTrackIndex >= 0) {
-        // Prepare to save the audio
-        val extractedAudioFile = File(context.getExternalFilesDir(null), "extracted_audio.aac")
-        val mediaMuxer =
-            MediaMuxer(extractedAudioFile.absolutePath, MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4)
-
-        // Create a new track in the muxer
-        mediaMuxer.addTrack(mediaExtractor.getTrackFormat(audioTrackIndex))
-        mediaMuxer.start()
-
-        // Buffer for reading audio data
-        val buffer = ByteBuffer.allocate(1024 * 1024) // 1 MB buffer
-        val bufferInfo = MediaCodec.BufferInfo()
-        var readSize: Int
-        while (true) {
-            readSize = mediaExtractor.readSampleData(buffer, 0)
-            if (readSize < 0) {
-                break // End of stream
-            }
+            bufferInfo.presentationTimeUs = extractor.sampleTime
             bufferInfo.offset = 0
-            bufferInfo.size = readSize
-            bufferInfo.presentationTimeUs = mediaExtractor.sampleTime
-            bufferInfo.flags = mediaExtractor.sampleFlags
+            bufferInfo.size = sampleSize
+            bufferInfo.flags = if (extractor.sampleFlags and MediaExtractor.SAMPLE_FLAG_SYNC != 0) {
+                MediaCodec.BUFFER_FLAG_KEY_FRAME
+            } else {
+                0
+            }
 
-            mediaMuxer.writeSampleData(audioTrackIndex, buffer, bufferInfo)
-            mediaExtractor.advance()
+            muxer.writeSampleData(muxerAudioTrackIndex, buffer, bufferInfo)
+            extractor.advance()
         }
 
-        mediaMuxer.stop()
-        mediaMuxer.release()
-        mediaExtractor.release()
+        // Release resources
+        muxer.stop()
+        muxer.release()
+        extractor.release()
 
-        // Convert the extracted audio to MP3
-        val outputMp3File = File(context.getExternalFilesDir(null), "output_audio.mp3")
-        convertToMp3(extractedAudioFile, outputMp3File) { status ->
-            onStatusUpdate(status)
-        }
+        Log.d("AudioExtractor", "Audio extracted to: ${outputFile.absolutePath}")
+        onStatusUpdate("Audio extracted to: ${outputFile.absolutePath}")
     } else {
+        Log.e("AudioExtractor", "No audio track found in the video.")
+        extractor.release()
         onStatusUpdate("No audio track found in video.")
-    }
-}
-
-fun convertToMp3(inputFile: File, outputFile: File, onStatusUpdate: (String) -> Unit) {
-    // Define the FFmpeg command to convert to MP3
-    val command =
-        "-i ${inputFile.absolutePath} -vn -ar 44100 -ac 2 -b:a 192k ${outputFile.absolutePath}"
-
-    // Execute the FFmpeg command
-    FFmpegKit.executeAsync(command) { session ->
-        val returnCode = session.returnCode
-        if (ReturnCode.isSuccess(returnCode)) {
-            // Conversion successful
-            onStatusUpdate("Conversion to MP3 successful: ${outputFile.absolutePath}")
-        } else {
-            // Conversion failed
-            onStatusUpdate("Conversion failed with return code: $returnCode")
-        }
     }
 }
