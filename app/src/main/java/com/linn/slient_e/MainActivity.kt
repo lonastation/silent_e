@@ -30,6 +30,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.linn.slient_e.ui.theme.Slient_eTheme
 import java.io.File
@@ -61,17 +62,15 @@ fun MainScreen(modifier: Modifier) {
             .fillMaxSize()
             .padding(top = 34.dp, start = 20.dp, end = 20.dp)
     ) {
-        // Video Picker Button at the top
         VideoPicker { uri ->
             selectedVideoUri = uri
-            isExtractionStarted = false // Reset extraction status when a new video is picked
+            isExtractionStarted = false
         }
 
-        // Spacer to add some space between the VideoPicker and the other content
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Start Extraction Button
         Button(
+            modifier = Modifier.fillMaxWidth(),
             onClick = {
                 selectedVideoUri?.let { uri ->
                     extractAudioAndConvertToMp3(uri, context) { status ->
@@ -85,8 +84,7 @@ fun MainScreen(modifier: Modifier) {
             Text("Start Audio Extraction")
         }
 
-        // Display selected video URI and extraction status
-        Spacer(modifier = Modifier.height(16.dp)) // Add some space for better layout
+        Spacer(modifier = Modifier.height(16.dp))
         Column {
             if (selectedVideoUri != null) {
                 Text("Selected Video: ${selectedVideoUri.toString()}")
@@ -94,6 +92,16 @@ fun MainScreen(modifier: Modifier) {
             if (isExtractionStarted) {
                 Text(extractionStatus)
             }
+        }
+    }
+}
+
+@Preview
+@Composable
+fun MainScreenPreview() {
+    Slient_eTheme {
+        Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+            MainScreen(Modifier.padding(innerPadding))
         }
     }
 }
