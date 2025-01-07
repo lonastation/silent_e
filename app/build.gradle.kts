@@ -5,7 +5,7 @@ plugins {
 
 android {
     namespace = "com.linn.slient_e"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.linn.slient_e"

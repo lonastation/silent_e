@@ -35,6 +35,14 @@ import androidx.compose.ui.unit.dp
 import com.linn.slient_e.ui.theme.Slient_eTheme
 import java.io.File
 import java.nio.ByteBuffer
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.runtime.mutableFloatStateOf
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -53,9 +61,14 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun MainScreen(modifier: Modifier) {
     var selectedVideoUri by remember { mutableStateOf<Uri?>(null) }
-    var isExtractionStarted by remember { mutableStateOf(false) }
-    var extractionStatus by remember { mutableStateOf("") }
+    var isExtracting by remember { mutableStateOf(false) }
+    var extractionProgress by remember { mutableFloatStateOf(0f) }
+    var showSaveDialog by remember { mutableStateOf(false) }
+    var mp3FileName by remember { mutableStateOf("") }
+    var extractedFile by remember { mutableStateOf<File?>(null) }
+    var savedFilePath by remember { mutableStateOf<String?>(null) }
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
 
     Column(
         modifier = modifier
@@ -64,7 +77,8 @@ fun MainScreen(modifier: Modifier) {
     ) {
         VideoPicker { uri ->
             selectedVideoUri = uri
-            isExtractionStarted = false
+            isExtracting = false
+            extractionProgress = 0f
         }
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -73,26 +87,84 @@ fun MainScreen(modifier: Modifier) {
             modifier = Modifier.fillMaxWidth(),
             onClick = {
                 selectedVideoUri?.let { uri ->
-                    extractAudioAndConvertToMp3(uri, context) { status ->
-                        extractionStatus = status
+                    isExtracting = true
+                    scope.launch {
+                        extractedFile = extractAudioAndConvertToMp3(
+                            uri,
+                            context,
+                            onProgressUpdate = { progress ->
+                                extractionProgress = progress
+                            }
+                        )
+                        isExtracting = false
+                        showSaveDialog = true
                     }
-                    isExtractionStarted = true
                 }
             },
-            enabled = selectedVideoUri != null
+            enabled = selectedVideoUri != null && !isExtracting
         ) {
             Text("Start Audio Extraction")
         }
 
         Spacer(modifier = Modifier.height(16.dp))
-        Column {
-            if (selectedVideoUri != null) {
-                Text("Selected Video: ${selectedVideoUri.toString()}")
-            }
-            if (isExtractionStarted) {
-                Text(extractionStatus)
-            }
+
+        if (isExtracting) {
+            LinearProgressIndicator(
+                progress = { extractionProgress },
+                modifier = Modifier.fillMaxWidth(),
+            )
+            Text("Extracting: ${(extractionProgress * 100).toInt()}%")
         }
+
+        if (selectedVideoUri != null) {
+            Text("Selected Video: ${selectedVideoUri.toString()}")
+        }
+
+        savedFilePath?.let { path ->
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                text = "Saved MP3 file: $path",
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+    }
+
+    if (showSaveDialog) {
+        AlertDialog(
+            onDismissRequest = { showSaveDialog = false },
+            title = { Text("Save MP3 File") },
+            text = {
+                OutlinedTextField(
+                    value = mp3FileName,
+                    onValueChange = { mp3FileName = it },
+                    label = { Text("Enter file name") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        extractedFile?.let { file ->
+                            val newFile = File(
+                                context.getExternalFilesDir(null),
+                                "$mp3FileName.mp3"
+                            )
+                            file.renameTo(newFile)
+                            savedFilePath = newFile.absolutePath
+                        }
+                        showSaveDialog = false
+                        mp3FileName = ""
+                    }
+                ) {
+                    Text("Save")
+                }
+            },
+            dismissButton = {
+                Button(onClick = { showSaveDialog = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
     }
 }
 
@@ -126,64 +198,81 @@ fun VideoPicker(onVideoSelected: (Uri) -> Unit) {
     }
 }
 
-fun extractAudioAndConvertToMp3(videoUri: Uri, context: Context, onStatusUpdate: (String) -> Unit) {
-    val extractor = MediaExtractor()
-    extractor.setDataSource(context, videoUri, null)
-    Log.d("AudioExtractor", "start")
+suspend fun extractAudioAndConvertToMp3(
+    videoUri: Uri,
+    context: Context,
+    onProgressUpdate: (Float) -> Unit
+): File? = withContext(Dispatchers.IO) {
+    try {
+        val extractor = MediaExtractor()
+        extractor.setDataSource(context, videoUri, null)
+        Log.d("AudioExtractor", "start")
 
-    var audioTrackIndex = -1
-    var audioFormat: MediaFormat? = null
+        var audioTrackIndex = -1
+        var audioFormat: MediaFormat? = null
 
-    for (i in 0 until extractor.trackCount) {
-        val format = extractor.getTrackFormat(i)
-        val mime = format.getString(MediaFormat.KEY_MIME)
-        if (mime != null && mime.startsWith("audio/")) {
-            audioTrackIndex = i
-            audioFormat = format
-            extractor.selectTrack(audioTrackIndex)
-            break
-        }
-    }
-
-    if (audioTrackIndex >= 0 && audioFormat != null) {
-        val outputFile =
-            File(context.getExternalFilesDir(null), "${videoUri.lastPathSegment}_audio.mp3")
-        val muxer = MediaMuxer(outputFile.absolutePath, MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4)
-
-        val muxerAudioTrackIndex = muxer.addTrack(audioFormat)
-        muxer.start()
-
-        val buffer = ByteBuffer.allocate(1024 * 1024)
-        val bufferInfo = MediaCodec.BufferInfo()
-
-        while (true) {
-            val sampleSize = extractor.readSampleData(buffer, 0)
-            if (sampleSize < 0) {
+        for (i in 0 until extractor.trackCount) {
+            val format = extractor.getTrackFormat(i)
+            val mime = format.getString(MediaFormat.KEY_MIME)
+            if (mime != null && mime.startsWith("audio/")) {
+                audioTrackIndex = i
+                audioFormat = format
+                extractor.selectTrack(audioTrackIndex)
                 break
             }
-
-            bufferInfo.presentationTimeUs = extractor.sampleTime
-            bufferInfo.offset = 0
-            bufferInfo.size = sampleSize
-            bufferInfo.flags = if (extractor.sampleFlags and MediaExtractor.SAMPLE_FLAG_SYNC != 0) {
-                MediaCodec.BUFFER_FLAG_KEY_FRAME
-            } else {
-                0
-            }
-
-            muxer.writeSampleData(muxerAudioTrackIndex, buffer, bufferInfo)
-            extractor.advance()
         }
 
-        muxer.stop()
-        muxer.release()
-        extractor.release()
+        if (audioTrackIndex >= 0 && audioFormat != null) {
+            val outputFile = File(context.getExternalFilesDir(null), "temp_audio.mp3")
+            val muxer =
+                MediaMuxer(outputFile.absolutePath, MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4)
 
-        Log.d("AudioExtractor", "Audio extracted to: ${outputFile.absolutePath}")
-        onStatusUpdate("Audio extracted to: ${outputFile.absolutePath}")
-    } else {
-        Log.e("AudioExtractor", "No audio track found in the video.")
-        extractor.release()
-        onStatusUpdate("No audio track found in video.")
+            val muxerAudioTrackIndex = muxer.addTrack(audioFormat)
+            muxer.start()
+
+            val buffer = ByteBuffer.allocate(1024 * 1024)
+            val bufferInfo = MediaCodec.BufferInfo()
+            var totalBytesRead = 0L
+            val duration = audioFormat.getLong(MediaFormat.KEY_DURATION)
+
+            while (true) {
+                val sampleSize = extractor.readSampleData(buffer, 0)
+                if (sampleSize < 0) break
+
+                bufferInfo.presentationTimeUs = extractor.sampleTime
+                bufferInfo.offset = 0
+                bufferInfo.size = sampleSize
+                bufferInfo.flags =
+                    if (extractor.sampleFlags and MediaExtractor.SAMPLE_FLAG_SYNC != 0) {
+                        MediaCodec.BUFFER_FLAG_KEY_FRAME
+                    } else {
+                        0
+                    }
+
+                muxer.writeSampleData(muxerAudioTrackIndex, buffer, bufferInfo)
+                totalBytesRead += sampleSize
+
+                val progress = extractor.sampleTime.toFloat() / duration.toFloat()
+                withContext(Dispatchers.Main) {
+                    onProgressUpdate(progress)
+                }
+
+                extractor.advance()
+            }
+
+            muxer.stop()
+            muxer.release()
+            extractor.release()
+
+            Log.d("AudioExtractor", "Audio extracted to: ${outputFile.absolutePath}")
+            return@withContext outputFile
+        } else {
+            Log.e("AudioExtractor", "No audio track found in the video.")
+            extractor.release()
+            return@withContext null
+        }
+    } catch (e: Exception) {
+        Log.e("AudioExtractor", "Error extracting audio", e)
+        return@withContext null
     }
 }
