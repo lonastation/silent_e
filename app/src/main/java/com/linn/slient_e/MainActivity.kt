@@ -14,13 +14,17 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -28,6 +32,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
@@ -35,14 +40,22 @@ import androidx.compose.ui.unit.dp
 import com.linn.slient_e.ui.theme.Slient_eTheme
 import java.io.File
 import java.nio.ByteBuffer
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableFloatStateOf
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import androidx.compose.runtime.rememberCoroutineScope
 import kotlinx.coroutines.launch
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import com.linn.slient_e.data.AppDatabase
+import com.linn.slient_e.data.ExtractRecord
+import com.linn.slient_e.ui.RecordListScreen
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -50,8 +63,50 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             Slient_eTheme {
+                val navController = rememberNavController()
+
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    MainScreen(Modifier.padding(innerPadding))
+                    NavHost(
+                        navController = navController,
+                        startDestination = "main",
+                        modifier = Modifier.padding(innerPadding)
+                    ) {
+                        composable("main") {
+                            val scope = rememberCoroutineScope()
+                            Box(modifier = Modifier.fillMaxSize()) {
+                                MainScreen(
+                                    modifier = Modifier,
+                                    onSaveRecord = { fileName, filePath ->
+                                        val db = AppDatabase.getDatabase(applicationContext)
+                                        scope.launch {
+                                            db.extractRecordDao().insertRecord(
+                                                ExtractRecord(
+                                                    fileName = fileName,
+                                                    filePath = filePath
+                                                )
+                                            )
+                                        }
+                                    }
+                                )
+                                FloatingActionButton(
+                                    onClick = { navController.navigate("records") },
+                                    modifier = Modifier
+                                        .padding(16.dp)
+                                        .align(Alignment.BottomEnd)
+                                ) {
+                                    Icon(Icons.AutoMirrored.Filled.List, "View Records")
+                                }
+                            }
+                        }
+                        composable("records") {
+                            val db = AppDatabase.getDatabase(applicationContext)
+                            val records by db.extractRecordDao()
+                                .getAllRecords()
+                                .collectAsState(initial = emptyList())
+
+                            RecordListScreen(records = records)
+                        }
+                    }
                 }
             }
         }
@@ -59,7 +114,10 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun MainScreen(modifier: Modifier) {
+fun MainScreen(
+    modifier: Modifier,
+    onSaveRecord: (fileName: String, filePath: String) -> Unit
+) {
     var selectedVideoUri by remember { mutableStateOf<Uri?>(null) }
     var isExtracting by remember { mutableStateOf(false) }
     var extractionProgress by remember { mutableFloatStateOf(0f) }
@@ -151,6 +209,7 @@ fun MainScreen(modifier: Modifier) {
                             )
                             file.renameTo(newFile)
                             savedFilePath = newFile.absolutePath
+                            onSaveRecord(mp3FileName, newFile.absolutePath)
                         }
                         showSaveDialog = false
                         mp3FileName = ""
@@ -173,7 +232,7 @@ fun MainScreen(modifier: Modifier) {
 fun MainScreenPreview() {
     Slient_eTheme {
         Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-            MainScreen(Modifier.padding(innerPadding))
+            MainScreen(Modifier.padding(innerPadding), onSaveRecord = { _: String, _: String -> })
         }
     }
 }
