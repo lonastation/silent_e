@@ -104,7 +104,10 @@ class MainActivity : ComponentActivity() {
                                 .getAllRecords()
                                 .collectAsState(initial = emptyList())
 
-                            RecordListScreen(records = records)
+                            RecordListScreen(
+                                records = records,
+                                navController = navController
+                            )
                         }
                     }
                 }

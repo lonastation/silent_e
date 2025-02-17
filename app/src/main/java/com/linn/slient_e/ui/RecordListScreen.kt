@@ -10,20 +10,38 @@ import androidx.compose.ui.unit.dp
 import com.linn.slient_e.data.ExtractRecord
 import java.text.SimpleDateFormat
 import java.util.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Home
+import androidx.navigation.NavController
 
 @Composable
 fun RecordListScreen(
     records: List<ExtractRecord>,
+    navController: NavController,
     modifier: Modifier = Modifier
 ) {
-    LazyColumn(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(16.dp)
-    ) {
-        items(records) { record ->
-            RecordItem(record = record)
-            HorizontalDivider()
+    Scaffold(
+        bottomBar = {
+            NavigationBar {
+                NavigationBarItem(
+                    icon = { Icon(Icons.Default.Home, contentDescription = "Home") },
+                    label = { Text("Home") },
+                    selected = false,
+                    onClick = { navController.navigate("main") }
+                )
+            }
+        }
+    ) { innerPadding ->
+        LazyColumn(
+            modifier = modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+                .padding(horizontal = 16.dp)
+        ) {
+            items(records) { record ->
+                RecordItem(record = record)
+                HorizontalDivider()
+            }
         }
     }
 }
