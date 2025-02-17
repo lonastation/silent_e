@@ -5,9 +5,9 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 
-@Database(entities = [ExtractRecord::class], version = 1, exportSchema = false)
+@Database(entities = [AudioRecord::class], version = 1, exportSchema = false)
 abstract class AppDatabase : RoomDatabase() {
-    abstract fun extractRecordDao(): ExtractRecordDao
+    abstract fun audioRecordDao(): AudioRecordDao
 
     companion object {
         @Volatile
@@ -15,13 +15,11 @@ abstract class AppDatabase : RoomDatabase() {
 
         fun getDatabase(context: Context): AppDatabase {
             return INSTANCE ?: synchronized(this) {
-                val instance = Room.databaseBuilder(
-                    context.applicationContext,
+                Room.databaseBuilder(
+                    context,
                     AppDatabase::class.java,
                     "app_database"
-                ).build()
-                INSTANCE = instance
-                instance
+                ).build().also { INSTANCE = it }
             }
         }
     }

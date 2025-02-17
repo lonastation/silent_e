@@ -4,7 +4,7 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 
 @Entity(tableName = "extract_record")
-data class ExtractRecord(
+data class AudioRecord(
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
     val fileName: String,
