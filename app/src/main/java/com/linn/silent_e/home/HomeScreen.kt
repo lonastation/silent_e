@@ -1,4 +1,4 @@
-package com.linn.slient_e.home
+package com.linn.silent_e.home
 
 import android.content.Context
 import android.media.MediaCodec
@@ -33,8 +33,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.linn.slient_e.AppViewModelProvider
-import com.linn.slient_e.ui.theme.Slient_eTheme
+import com.linn.silent_e.AppViewModelProvider
+import com.linn.silent_e.ui.theme.Silent_eTheme
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -46,7 +46,7 @@ fun HomeScreen(
     viewModel: HomeViewModel = viewModel(factory = AppViewModelProvider.Factory)
 ) {
     val coroutineScope = rememberCoroutineScope()
-    Slient_eTheme {
+    Silent_eTheme {
         Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
             MainBody(
                 Modifier.padding(innerPadding),

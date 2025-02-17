@@ -1,4 +1,4 @@
-package com.linn.slient_e
+package com.linn.silent_e
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -19,11 +19,11 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
-import com.linn.slient_e.navigation.Screens
-import com.linn.slient_e.navigation.SlientNavHost
+import com.linn.silent_e.navigation.Screens
+import com.linn.silent_e.navigation.SilentNavHost
 
 @Composable
-fun SlientApp(navController: NavHostController = rememberNavController()) {
+fun SilentApp(navController: NavHostController = rememberNavController()) {
     BottomNavigationBar(navController)
 }
 
@@ -65,7 +65,7 @@ fun BottomNavigationBar(navController: NavHostController) {
             }
         }
     ) { paddingValues ->
-        SlientNavHost(
+        SilentNavHost(
             navController = navController,
             modifier = Modifier.padding(paddingValues = paddingValues)
         )
@@ -73,22 +73,22 @@ fun BottomNavigationBar(navController: NavHostController) {
 }
 
 data class BottomNavigationItem(
-    val label: String = "",
+    val label: String = Screens.Home.title,
     val icon: ImageVector = Icons.Filled.Home,
-    val route: String = ""
+    val route: String = Screens.Home.route
 ) {
 
     @Composable
     fun bottomNavigationItems(): List<BottomNavigationItem> {
         return listOf(
             BottomNavigationItem(
-                label = "Home",
+                label = Screens.Home.title,
                 icon = Screens.Home.icon,
                 route = Screens.Home.route
             ),
             BottomNavigationItem(
-                label = "Record",
-                icon = Screens.Home.icon,
+                label = Screens.Records.title,
+                icon = Screens.Records.icon,
                 route = Screens.Records.route
             ),
         )

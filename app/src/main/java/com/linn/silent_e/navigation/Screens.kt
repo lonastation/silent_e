@@ -1,4 +1,4 @@
-package com.linn.slient_e.navigation
+package com.linn.silent_e.navigation
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Audiotrack
@@ -10,10 +10,6 @@ sealed class Screens(
     val title: String,
     val icon: ImageVector
 ) {
-    object Home : Screens("home", "Home", Icons.Default.Home)
-    object Records : Screens("records", "Records", Icons.Default.Audiotrack)
-
-    companion object {
-        val screens = listOf(Home, Records)
-    }
+    data object Home : Screens("home", "Home", Icons.Default.Home)
+    data object Records : Screens("records", "Record", Icons.Default.Audiotrack)
 } 

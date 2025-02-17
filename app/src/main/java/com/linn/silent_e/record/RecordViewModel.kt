@@ -1,9 +1,9 @@
-package com.linn.slient_e.record
+package com.linn.silent_e.record
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.linn.slient_e.data.AudioRecord
-import com.linn.slient_e.data.RecordRepository
+import com.linn.silent_e.data.AudioRecord
+import com.linn.silent_e.data.RecordRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch

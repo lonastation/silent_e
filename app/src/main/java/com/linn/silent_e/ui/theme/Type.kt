@@ -1,4 +1,4 @@
-package com.linn.slient_e.ui.theme
+package com.linn.silent_e.ui.theme
 
 import androidx.compose.material3.Typography
 import androidx.compose.ui.text.TextStyle

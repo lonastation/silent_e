@@ -1,4 +1,4 @@
-package com.linn.slient_e
+package com.linn.silent_e
 
 import org.junit.Test
 

@@ -1,10 +1,10 @@
-package com.linn.slient_e
+package com.linn.silent_e
 
 import android.app.Application
-import com.linn.slient_e.data.AppContainer
-import com.linn.slient_e.data.AppDataContainer
+import com.linn.silent_e.data.AppContainer
+import com.linn.silent_e.data.AppDataContainer
 
-class SlientApplication : Application() {
+class SilentApplication : Application() {
     lateinit var container: AppContainer
 
     override fun onCreate() {

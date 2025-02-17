@@ -1,4 +1,4 @@
-package com.linn.slient_e.record
+package com.linn.silent_e.record
 
 import android.media.MediaPlayer
 import androidx.compose.foundation.layout.Arrangement
@@ -32,9 +32,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.linn.slient_e.AppViewModelProvider
-import com.linn.slient_e.data.AudioRecord
-import com.linn.slient_e.ui.theme.Slient_eTheme
+import com.linn.silent_e.AppViewModelProvider
+import com.linn.silent_e.data.AudioRecord
+import com.linn.silent_e.ui.theme.Silent_eTheme
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -45,7 +45,7 @@ fun RecordScreen(
 ) {
     val listUiState by viewModel.listUiState.collectAsState()
 
-    Slient_eTheme {
+    Silent_eTheme {
         Surface(modifier = Modifier.fillMaxSize()) {
             RecordListBody(
                 records = listUiState.itemList,

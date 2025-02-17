@@ -1,4 +1,4 @@
-package com.linn.slient_e.data
+package com.linn.silent_e.data
 
 import android.content.Context
 

@@ -1,11 +1,11 @@
-package com.linn.slient_e.home
+package com.linn.silent_e.home
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
-import com.linn.slient_e.data.AudioRecord
-import com.linn.slient_e.data.RecordRepository
+import com.linn.silent_e.data.AudioRecord
+import com.linn.silent_e.data.RecordRepository
 
 
 class HomeViewModel(private val recordRepository: RecordRepository) : ViewModel() {

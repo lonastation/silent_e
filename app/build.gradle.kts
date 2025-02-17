@@ -7,11 +7,11 @@ plugins {
 }
 
 android {
-    namespace = "com.linn.slient_e"
+    namespace = "com.linn.silent_e"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.linn.slient_e"
+        applicationId = "com.linn.silent_e"
         minSdk = 34
         targetSdk = 34
         versionCode = 1

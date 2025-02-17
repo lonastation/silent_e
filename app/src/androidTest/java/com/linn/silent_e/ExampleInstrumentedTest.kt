@@ -1,4 +1,4 @@
-package com.linn.slient_e
+package com.linn.silent_e
 
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -19,6 +19,6 @@ class ExampleInstrumentedTest {
     fun useAppContext() {
         // Context of the app under test.
         val appContext = InstrumentationRegistry.getInstrumentation().targetContext
-        assertEquals("com.linn.slient_e", appContext.packageName)
+        assertEquals("com.linn.silent_e", appContext.packageName)
     }
 }
