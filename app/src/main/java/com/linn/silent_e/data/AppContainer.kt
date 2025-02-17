@@ -8,6 +8,6 @@ interface AppContainer {
 
 class AppDataContainer(private val context: Context):AppContainer {
     override val recordRepository: RecordRepository by lazy {
-        OfflineRecordRepository(AppDatabase.getDatabase(context).audioRecordDao())
+        OfflineRecordRepository(SilentDatabase.getDatabase(context).audioRecordDao())
     }
 }
