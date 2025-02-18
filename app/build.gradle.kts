@@ -12,8 +12,8 @@ android {
 
     defaultConfig {
         applicationId = "com.linn.silent_e"
-        minSdk = 34
-        targetSdk = 34
+        minSdk = 35
+        targetSdk = 35
         versionCode = 1
         versionName = "1.0"
 
