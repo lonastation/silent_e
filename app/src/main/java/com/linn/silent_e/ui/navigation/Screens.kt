@@ -1,4 +1,4 @@
-package com.linn.silent_e.navigation
+package com.linn.silent_e.ui.navigation
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Audiotrack

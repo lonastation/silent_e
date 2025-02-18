@@ -1,12 +1,12 @@
-package com.linn.silent_e.navigation
+package com.linn.silent_e.ui.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import com.linn.silent_e.home.HomeScreen
-import com.linn.silent_e.record.RecordScreen
+import com.linn.silent_e.ui.screens.HomeScreen
+import com.linn.silent_e.ui.screens.RecordScreen
 
 @Composable
 fun SilentNavHost(

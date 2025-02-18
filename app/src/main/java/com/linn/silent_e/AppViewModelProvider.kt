@@ -4,8 +4,8 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.CreationExtras
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
-import com.linn.silent_e.home.HomeViewModel
-import com.linn.silent_e.record.RecordViewModel
+import com.linn.silent_e.ui.screens.HomeViewModel
+import com.linn.silent_e.ui.screens.RecordViewModel
 
 object AppViewModelProvider {
     val Factory = viewModelFactory {

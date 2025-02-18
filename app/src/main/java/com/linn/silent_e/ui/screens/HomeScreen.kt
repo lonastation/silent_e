@@ -1,4 +1,4 @@
-package com.linn.silent_e.home
+package com.linn.silent_e.ui.screens
 
 import android.content.Context
 import android.media.MediaCodec

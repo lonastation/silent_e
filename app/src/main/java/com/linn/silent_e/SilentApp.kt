@@ -19,8 +19,8 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
-import com.linn.silent_e.navigation.Screens
-import com.linn.silent_e.navigation.SilentNavHost
+import com.linn.silent_e.ui.navigation.Screens
+import com.linn.silent_e.ui.navigation.SilentNavHost
 
 @Composable
 fun SilentApp(navController: NavHostController = rememberNavController()) {

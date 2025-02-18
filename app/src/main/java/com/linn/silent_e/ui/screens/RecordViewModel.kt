@@ -1,4 +1,4 @@
-package com.linn.silent_e.record
+package com.linn.silent_e.ui.screens
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope

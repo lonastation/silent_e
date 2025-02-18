@@ -1,4 +1,4 @@
-package com.linn.silent_e.home
+package com.linn.silent_e.ui.screens
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf

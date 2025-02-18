@@ -1,4 +1,4 @@
-package com.linn.silent_e.record
+package com.linn.silent_e.ui.screens
 
 import android.media.MediaPlayer
 import androidx.compose.foundation.layout.Arrangement
