@@ -8,7 +8,7 @@ plugins {
 
 android {
     namespace = "com.linn.silent_e"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.linn.silent_e"
