@@ -3,7 +3,7 @@ plugins {
     alias(libs.plugins.jetbrains.kotlin.android)
     alias(libs.plugins.jetbrainsCompose)
     alias(libs.plugins.compose.compiler)
-    id("com.google.devtools.ksp") version "2.1.20-2.0.0"
+    id("com.google.devtools.ksp") version "2.3.2"
 }
 
 android {
@@ -61,7 +61,11 @@ dependencies {
     implementation(libs.androidx.material3)
     implementation(libs.androidx.material.icons)
     implementation(libs.androidx.activity)
-    implementation(libs.ffmpeg.kit)
+
+//    implementation(libs.ffmpeg.kit)
+    // download source from https://artifactory.appodeal.com/appodeal-public/com/arthenica/ffmpeg-kit-full-gpl/6.0-2.LTS/
+    implementation(files("libs/ffmpeg-kit-full-gpl-6.0-2.LTS.aar"))
+    implementation(libs.smart.exception.java)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
